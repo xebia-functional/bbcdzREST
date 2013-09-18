@@ -1,21 +1,39 @@
-#Play 2 Scala REST API + ReactiveMongo Tutorial
+#Play2 Scala REST + ReactiveMongo
 
 This app is a simple example that shows a basic CRUD REST API built with Play2 Scala + Reactive Mongo.
+The purpose of this tutorial is to showcase how easy it is to get started with a full reactive app thanks to Play async nature and the ReactiveMongo
+driver.
+
+Find out more about Reactive Apps here:
+
+- [The Reactive Manifesto](http://www.reactivemanifesto.org/)
+- [Writing Reactive Apps with ReactiveMongo and Play](http://stephane.godbillon.com/2012/10/18/writing-a-simple-app-with-reactivemongo-and-play-framework-pt-1.html)
+- [Typesafe Platform](http://typesafe.com/platform)
+- [Reactive Mongo](http://reactivemongo.org/)
+- [Reactive Mongo Play Plugin](https://github.com/ReactiveMongo/Play-ReactiveMongo)
+- [Akka](http://akka.io/)
+- [Viktor Klang - Distributed Reactive Programming -- Introducing Akka 2.2](http://vimeo.com/user18356272/review/66548920/f93e3fa7d9)
 
 ---
 
 ##Setup
 
-The tutorial assumes you have Play 2.1.x and Mongo installed on your local machine
+The tutorial assumes you have Play 2.1.x and Mongo installed on your local machine which you can get here:
 
-http://www.playframework.com/download
-http://www.mongodb.org/downloads
+- Play2 http://www.playframework.com/download
+
+- Mongo http://www.mongodb.org/downloads
 
 ###Create the app
 
+Once Play is installed you can simply create an app in your terminal like so:
+
     play new bbcdzREST
+    cd bbcdzREST
     
 ###Add the ReactiveMongo Play Plugin Dependencies
+
+Then proceed to edit some config files to add the Play Reactive Mongo plugin dependencies
 
 project/Build.scala
 
@@ -73,11 +91,11 @@ object Beer {
 
 ###Utils
 
-These are just handy wrappers used in Play action composition to validate JSON and provide a not so secure layer that can give you some hints on how to implement your own API security and validate the incoming data conforms to a model.
+These are just handy wrappers used in Play action composition to validate JSON and provide a not so secure layer that can give you some hints on how to implement your own API security and validate that the incoming data conforms to a model.
 
 *app/utils/JsonUtils.scala*
 
-This trait function is used to validate incoming JSON in a generic reusable way so we can focus our controller actions in the actual CRUD and not so much in validating each time.
+This trait function is used to validate incoming JSON in a generic reusable way so we can focus our controller actions in the actual CRUD and not so much in validating on each controller method.
 
 ```scala
 package utils
@@ -142,6 +160,10 @@ trait SecureActions extends JsonUtils {
 }
 ```
 
+Find more about action composition here:
+
+http://www.playframework.com/documentation/2.2.x/ScalaActionsComposition
+
 ### REST API 
 
 The REST API is implemented with a simple Play controller that uses the above mentioned utils and it's configured in the play routes file to each one of the HTTP verbs representing the CRUD.
@@ -176,6 +198,8 @@ DELETE        /beers/:id           controllers.Application.deleteBeer(id)
 ```
 
 app/controllers/Application.scala
+
+And finally the application controller that implements the basic CRUD operations as mapped in the routes file.
 
 ```scala
 package controllers
