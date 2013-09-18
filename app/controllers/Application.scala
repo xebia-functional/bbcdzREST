@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2013 47 Degrees, LLC
+ * http://47deg.com
+ * hello@47deg.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package controllers
 
 import play.api.mvc._
@@ -7,16 +25,31 @@ import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.SecureActions
 import models.Beer
 
+/**
+ * REST API Controller providing CRUD operations for Beers with Reactive Mongo in a full async API
+ */
 object Application extends Controller with MongoController with SecureActions {
 
-  def beersCollection = db.collection[JSONCollection]("beers")
+  /**
+   * A reference of a JSON style collection in Mongo
+   */
+  private def beersCollection = db.collection[JSONCollection]("beers")
 
-  def asJson(v: Option[JsObject]) = v.map(Ok(_)).getOrElse(NotFound)
+  /**
+   * Convinience helper thar marshalls json or sends a 404 if none found
+   */
+  private def asJson(v: Option[JsObject]) = v.map(Ok(_)).getOrElse(NotFound)
 
+  /**
+   * Default index entry point
+   */
   def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+    Ok(views.html.index("bbcdzREST!"))
   }
 
+  /**
+   * Actions that reactively list all beers in the collection
+   */
   def listBeers() = SimpleAuthenticatedAction {
     _ =>
       beersCollection
@@ -28,6 +61,9 @@ object Application extends Controller with MongoController with SecureActions {
       }
   }
 
+  /**
+   * Finds a beer by Id
+   */
   def findBeer(id: String) = SimpleAuthenticatedAction {
     _ =>
       beersCollection
@@ -35,6 +71,9 @@ object Application extends Controller with MongoController with SecureActions {
         .one[JsObject] map asJson
   }
 
+  /**
+   * Adds a beer
+   */
   def addBeer() = JsonAuthenticatedAction[Beer] {
     (beer, _) =>
       beersCollection.insert(beer) map {
@@ -42,6 +81,9 @@ object Application extends Controller with MongoController with SecureActions {
       }
   }
 
+  /**
+   * Partially updates the properties of a beer
+   */
   def updateBeer(id: String) = JsonAuthenticatedAction[JsObject] {
     (json, _) =>
       for {
@@ -50,6 +92,9 @@ object Application extends Controller with MongoController with SecureActions {
       } yield asJson(newBeer)
   }
 
+  /**
+   * Deletes a beer by id
+   */
   def deleteBeer(id: String) = SimpleAuthenticatedAction {
     _ =>
       for {

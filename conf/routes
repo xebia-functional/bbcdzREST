@@ -3,13 +3,22 @@
 # ~~~~
 
 # Home page
-GET         /                    controllers.Application.index
+GET           /                    controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file        controllers.Assets.at(path="/public", file)
+GET           /assets/*file        controllers.Assets.at(path="/public", file)
 
-GET         /beers               controllers.Application.listBeers
-GET         /beers/:id           controllers.Application.findBeer(id)
-POST        /beers               controllers.Application.addBeer
-PUT         /beers/:id           controllers.Application.updateBeer(id)
-DELETE      /beers/:id           controllers.Application.deleteBeer(id)
+# Lists beers
+GET           /beers               controllers.Application.listBeers
+
+# Gets a beer by id
+GET           /beers/:id           controllers.Application.findBeer(id)
+
+# Adds a beer
+POST          /beers               controllers.Application.addBeer
+
+# Partially updates the content of a beer
+PUT           /beers/:id           controllers.Application.updateBeer(id)
+
+# Deletes a beer
+DELETE        /beers/:id           controllers.Application.deleteBeer(id)
