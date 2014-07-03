@@ -18,7 +18,7 @@ Find out more about Reactive Apps here:
 
 ##Setup
 
-The tutorial assumes you have Play 2.1.x and Mongo installed on your local machine which you can get here:
+The tutorial assumes you have Play 2.2.x and Mongo installed on your local machine which you can get here:
 
 - Play2 http://www.playframework.com/download
 
@@ -40,7 +40,7 @@ project/Build.scala
 ```scala
 
 libraryDependencies ++= Seq(
-  "org.reactivemongo" %% "play2-reactivemongo" % "0.9"
+  "org.reactivemongo" %% "play2-reactivemongo" % "0.10.2"
 )
 
 ```
@@ -102,13 +102,14 @@ package utils
 
 import play.api.libs.json.{JsValue, Reads}
 import scala.concurrent.Future
-import play.api.mvc.{Results, Result}
+import play.api.mvc.{Results, SimpleResult}
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 
 trait JsonUtils extends Results {
 
-  def validateJson[T](json: JsValue, success: (T, JsValue) => Future[Result])(implicit reads: Reads[T]) = {
+  def validateJson[T](json: JsValue, success: (T, JsValue) =>
+    Future[SimpleResult])(implicit reads: Reads[T]) = {
     json.validate[T].asEither match {
       case Left(errors) => {
         Logger.warn(s"Bad request : $errors")
@@ -138,18 +139,18 @@ trait SecureActions extends JsonUtils {
 
   val REST_API_KEY_HEADER = "REST-API-KEY-HEADER"
 
-  def SimpleAuthenticatedAction(f: (Request[AnyContent]) => Future[Result]) = Action {
-    implicit request => Async {
+  def SimpleAuthenticatedAction(f: (Request[AnyContent]) => Future[SimpleResult]) =
+  Action.async { implicit request =>
       Logger.debug(s"received request : $request")
       request.headers.get(REST_API_KEY_HEADER).map {
         key => f(request)
       } getOrElse {
         Future(Unauthorized(s"Missing authentication headers: $REST_API_KEY_HEADER"))
       }
-    }
   }
 
-  def JsonAuthenticatedAction[T](f: (T, Request[AnyContent]) => Future[Result])(implicit reads: Reads[T]) = SimpleAuthenticatedAction {
+  def JsonAuthenticatedAction[T](f: (T, Request[AnyContent]) =>
+    Future[SimpleResult])(implicit reads: Reads[T]) = SimpleAuthenticatedAction {
     (request) =>
       request.body.asJson match {
         case Some(json) => validateJson[T](json, (t, validJson) => f(t, request))
@@ -204,12 +205,14 @@ And finally the application controller that implements the basic CRUD operations
 ```scala
 package controllers
 
+import models.Beer
+import models.Beer._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json._
 import play.api.mvc._
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
-import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.SecureActions
-import models.Beer
 
 object Application extends Controller with MongoController with SecureActions {
 
@@ -226,7 +229,7 @@ object Application extends Controller with MongoController with SecureActions {
       beersCollection
         .find(Json.obj())
         .cursor[JsObject]
-        .toList() map {
+        .collect[List]() map {
         beers =>
           Ok(JsArray(beers))
       }
