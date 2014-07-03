@@ -37,15 +37,14 @@ trait SecureActions extends JsonUtils {
    * @param f the underlying action if everything goes well
    * @return a promise of an action result
    */
-  def SimpleAuthenticatedAction(f: (Request[AnyContent]) => Future[Result]) = Action {
-    implicit request => Async {
+  def SimpleAuthenticatedAction(f: (Request[AnyContent]) => Future[SimpleResult]) =
+  Action.async { implicit request =>
       Logger.debug(s"received request : $request")
       request.headers.get(REST_API_KEY_HEADER).map {
         key => f(request)
       } getOrElse {
         Future(Unauthorized(s"Missing authentication headers: $REST_API_KEY_HEADER"))
       }
-    }
   }
 
   /**
@@ -55,7 +54,8 @@ trait SecureActions extends JsonUtils {
    * @tparam T a generic type parameter indicating the type that the JSON representation conforms to
    * @return a promise of an action result
    */
-  def JsonAuthenticatedAction[T](f: (T, Request[AnyContent]) => Future[Result])(implicit reads: Reads[T]) = SimpleAuthenticatedAction {
+  def JsonAuthenticatedAction[T](f: (T, Request[AnyContent]) =>
+    Future[SimpleResult])(implicit reads: Reads[T]) = SimpleAuthenticatedAction {
     (request) =>
       request.body.asJson match {
         case Some(json) => validateJson[T](json, (t, validJson) => f(t, request))
