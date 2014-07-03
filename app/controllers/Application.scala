@@ -18,12 +18,15 @@
 
 package controllers
 
+import models.Beer
+import models.Beer._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json._
 import play.api.mvc._
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
-import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.SecureActions
-import models.Beer
+
 
 /**
  * REST API Controller providing CRUD operations for Beers with Reactive Mongo in a full async API
@@ -55,7 +58,7 @@ object Application extends Controller with MongoController with SecureActions {
       beersCollection
         .find(Json.obj())
         .cursor[JsObject]
-        .toList() map {
+        .collect[List]() map {
         beers =>
           Ok(JsArray(beers))
       }
